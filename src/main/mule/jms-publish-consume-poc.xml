@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="e0220b0a-6c34-4c73-ad39-6aa8ffe266ac" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<jms:config name="JMS_Config" doc:name="JMS Config" doc:id="0acfb229-92dc-474d-9ce6-76fca344e493" >
+		<jms:active-mq-connection username="admin" password="admin">
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616" />
+		</jms:active-mq-connection>
+	</jms:config>
+	<flow name="jms-publish-consume-pocFlow" doc:id="115119f0-82db-4001-8996-f2cce0889797" >
+		<http:listener doc:name="Listener" doc:id="98c4ffb3-9ad8-44ef-b5aa-74a3816608d2" config-ref="HTTP_Listener_config" path="/jms-publish-consume-poc"/>
+		<logger level="INFO" doc:name="Logger" doc:id="29365c90-d68d-4fc2-958b-745977627618" message="Inside Publish Consume POC "/>
+		<jms:publish-consume doc:name="Publish consume" doc:id="7c6c8c7e-0a29-4eab-ba0d-c9b00e596416" config-ref="JMS_Config" destination="test-queue"/>
+		<logger level="INFO" doc:name="Logger" doc:id="07a242eb-7f22-4a97-9250-d599df46596b" message="Flow end logger :#[payload]"/>
+	</flow>
+	<flow name="jms-publish-consume-pocFlow1" doc:id="fc3984bb-658f-4628-a1dd-332aebfd6371" >
+		<jms:listener doc:name="On New Message" doc:id="ce8dd207-5fba-4df5-bf98-85eb377b5eac" config-ref="JMS_Config" destination="test-queue"/>
+		<logger level="INFO" doc:name="Logger" doc:id="b82271ef-5036-418e-ac34-e3ac7bc3d89e" message="Inside On New Message"/>
+		<ee:transform doc:name="Transform Message" doc:id="c027077b-05d1-4cbc-bd1a-fbd982f94d60" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Message" : "Message consumed and response returned"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
